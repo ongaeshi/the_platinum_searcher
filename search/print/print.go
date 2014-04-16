@@ -100,6 +100,7 @@ func (self *Printer) printMatch(pattern *pattern.Pattern, line *match.Line) {
 	} else if pattern.IgnoreCase {
 		fmt.Printf("%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
 	} else {
+		fmt.Println("!\"#$%&'()")
 		fmt.Printf("%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
 	}
 }
