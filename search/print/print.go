@@ -7,6 +7,7 @@ import (
 	"github.com/monochromegane/the_platinum_searcher/search/match"
 	"github.com/monochromegane/the_platinum_searcher/search/option"
 	"github.com/monochromegane/the_platinum_searcher/search/pattern"
+	"io"
 	"os"
 	"strings"
 )
@@ -81,42 +82,50 @@ func (self *Printer) Print() {
 
 func (self *Printer) printPath(path string) {
 	if self.Option.NoColor {
-		fmt.Printf("%s", path)
+		fmt.Fprintf(self.writer(), "%s", path)
 	} else {
-		fmt.Printf("%s%s%s", ColorPath, path, ColorReset)
+		fmt.Fprintf(self.writer(), "%s%s%s", ColorPath, path, ColorReset)
 	}
 	if !self.Option.FilesWithMatches && self.Option.FilesWithRegexp == "" {
-		fmt.Printf(":")
+		fmt.Fprintf(self.writer(), ":")
 	}
 }
 func (self *Printer) printLineNumber(lineNum int, sep string) {
 	if self.Option.NoColor {
-		fmt.Printf("%d%s", lineNum, sep)
+		fmt.Fprintf(self.writer(), "%d%s", lineNum, sep)
 	} else {
-		fmt.Printf("%s%d%s%s", ColorLineNumber, lineNum, ColorReset, sep)
+		fmt.Fprintf(self.writer(), "%s%d%s%s", ColorLineNumber, lineNum, ColorReset, sep)
 	}
 }
 func (self *Printer) printMatch(pattern *pattern.Pattern, line *match.Line) {
 	self.printLineNumber(line.Num, ":")
 	if self.Option.NoColor {
-		fmt.Printf("%s", line.Str)
+		fmt.Fprintf(self.writer(), "%s", line.Str)
 	} else if pattern.IgnoreCase {
-		fmt.Printf("%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
+		fmt.Fprintf(self.writer(), "%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
 	} else {
-		// out := os.Stdout
-		enc := japanese.ShiftJIS.NewEncoder()
-		// enc := japanese.EUCJP.NewEncoder()
-		// enc := japanese.ISO2022JP.NewEncoder()
-		out := transform.NewWriter(out, enc)
-		
-		fmt.Fprintf(out, "%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
+		fmt.Fprintf(self.writer(), "%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
 	}
 }
 
 func (self *Printer) printContext(lines []*match.Line) {
 	for _, line := range lines {
 		self.printLineNumber(line.Num, "-")
-		fmt.Printf("%s", line.Str)
-		fmt.Println()
+		fmt.Fprintf(self.writer(), "%s", line.Str)
+		fmt.Fprintln(self.writer())
 	}
 }
+
+func (self *Printer) writer() (io.Writer) {
+	if true {
+		enc := japanese.ShiftJIS.NewEncoder()
+		// enc := japanese.EUCJP.NewEncoder()
+		// enc := japanese.ISO2022JP.NewEncoder()
+		out := transform.NewWriter(os.Stdout, enc)
+		return out
+		
+	} else {
+		return os.Stdout
+	}
+}
+
