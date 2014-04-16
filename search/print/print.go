@@ -2,9 +2,12 @@ package print
 
 import (
 	"fmt"
+	"code.google.com/p/go.text/encoding/japanese"
+	"code.google.com/p/go.text/transform"
 	"github.com/monochromegane/the_platinum_searcher/search/match"
 	"github.com/monochromegane/the_platinum_searcher/search/option"
 	"github.com/monochromegane/the_platinum_searcher/search/pattern"
+	"os"
 	"strings"
 )
 
@@ -100,8 +103,13 @@ func (self *Printer) printMatch(pattern *pattern.Pattern, line *match.Line) {
 	} else if pattern.IgnoreCase {
 		fmt.Printf("%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
 	} else {
-		fmt.Println("!\"#$%&'()")
-		fmt.Printf("%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
+		// out := os.Stdout
+		enc := japanese.ShiftJIS.NewEncoder()
+		// enc := japanese.EUCJP.NewEncoder()
+		// enc := japanese.ISO2022JP.NewEncoder()
+		out := transform.NewWriter(out, enc)
+		
+		fmt.Fprintf(out, "%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
 	}
 }
 
