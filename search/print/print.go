@@ -117,13 +117,17 @@ func (self *Printer) printContext(lines []*match.Line) {
 }
 
 func (self *Printer) writer() (io.Writer) {
-	if true {
-		enc := japanese.ShiftJIS.NewEncoder()
-		// enc := japanese.EUCJP.NewEncoder()
-		// enc := japanese.ISO2022JP.NewEncoder()
-		out := transform.NewWriter(os.Stdout, enc)
-		return out
-		
+	if len(self.Option.OutputEncode) > 0 {
+		switch self.Option.OutputEncode[0] {
+		case "sjis":
+			return transform.NewWriter(os.Stdout, japanese.ShiftJIS.NewEncoder())
+		case "euc":
+			return transform.NewWriter(os.Stdout, japanese.EUCJP.NewEncoder())
+		case "jis":
+			return transform.NewWriter(os.Stdout, japanese.ISO2022JP.NewEncoder())
+		default:
+			return os.Stdout
+		}
 	} else {
 		return os.Stdout
 	}
