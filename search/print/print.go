@@ -33,7 +33,9 @@ type Printer struct {
 }
 
 func (self *Printer) Print() {
-	self.Writer = self.createWriter()
+	if self.Writer == nil {
+		self.Writer = self.createWriter()
+	}
 	
 	for arg := range self.In {
 
