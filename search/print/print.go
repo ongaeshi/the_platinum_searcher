@@ -29,9 +29,12 @@ type Printer struct {
 	In     chan *Params
 	Done   chan bool
 	Option *option.Option
+	Writer io.Writer
 }
 
 func (self *Printer) Print() {
+	self.Writer = self.createWriter()
+	
 	for arg := range self.In {
 
 		if self.Option.FilesWithRegexp != "" {
@@ -82,41 +85,41 @@ func (self *Printer) Print() {
 
 func (self *Printer) printPath(path string) {
 	if self.Option.NoColor {
-		fmt.Fprintf(self.writer(), "%s", path)
+		fmt.Fprintf(self.Writer, "%s", path)
 	} else {
-		fmt.Fprintf(self.writer(), "%s%s%s", ColorPath, path, ColorReset)
+		fmt.Fprintf(self.Writer, "%s%s%s", ColorPath, path, ColorReset)
 	}
 	if !self.Option.FilesWithMatches && self.Option.FilesWithRegexp == "" {
-		fmt.Fprintf(self.writer(), ":")
+		fmt.Fprintf(self.Writer, ":")
 	}
 }
 func (self *Printer) printLineNumber(lineNum int, sep string) {
 	if self.Option.NoColor {
-		fmt.Fprintf(self.writer(), "%d%s", lineNum, sep)
+		fmt.Fprintf(self.Writer, "%d%s", lineNum, sep)
 	} else {
-		fmt.Fprintf(self.writer(), "%s%d%s%s", ColorLineNumber, lineNum, ColorReset, sep)
+		fmt.Fprintf(self.Writer, "%s%d%s%s", ColorLineNumber, lineNum, ColorReset, sep)
 	}
 }
 func (self *Printer) printMatch(pattern *pattern.Pattern, line *match.Line) {
 	self.printLineNumber(line.Num, ":")
 	if self.Option.NoColor {
-		fmt.Fprintf(self.writer(), "%s", line.Str)
+		fmt.Fprintf(self.Writer, "%s", line.Str)
 	} else if pattern.IgnoreCase {
-		fmt.Fprintf(self.writer(), "%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
+		fmt.Fprintf(self.Writer, "%s", pattern.Regexp.ReplaceAllString(line.Str, ColorMatch+"${1}"+ColorReset))
 	} else {
-		fmt.Fprintf(self.writer(), "%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
+		fmt.Fprintf(self.Writer, "%s", strings.Replace(line.Str, pattern.Pattern, ColorMatch+pattern.Pattern+ColorReset, -1))
 	}
 }
 
 func (self *Printer) printContext(lines []*match.Line) {
 	for _, line := range lines {
 		self.printLineNumber(line.Num, "-")
-		fmt.Fprintf(self.writer(), "%s", line.Str)
-		fmt.Fprintln(self.writer())
+		fmt.Fprintf(self.Writer, "%s", line.Str)
+		fmt.Fprintln(self.Writer)
 	}
 }
 
-func (self *Printer) writer() (io.Writer) {
+func (self *Printer) createWriter() (io.Writer) {
 	if len(self.Option.OutputEncode) > 0 {
 		switch self.Option.OutputEncode[0] {
 		case "sjis":
